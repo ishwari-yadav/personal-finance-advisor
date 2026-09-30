@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="AI-powered personal finance planning assistant: budget plans, spending analysis, saving suggestions and goal strategy." />
+  <title>Personal Finance Advisor Bot</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="brand">
+        <span class="brand-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 17 9 11 13 15 21 7"></polyline>
+            <polyline points="15 7 21 7 21 13"></polyline>
+          </svg>
+        </span>
+        <div>
+          <h1>Personal Finance Advisor Bot</h1>
+          <p class="tagline">Smart budgeting, spending insights &amp; goal planning with AI</p>
+        </div>
+      </div>
+      <span class="badge">AI-powered &bull; Educational tool</span>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- ================= INPUT ================= -->
+    <section class="card form-card" aria-labelledby="form-title">
+      <h2 id="form-title">Your finances</h2>
+      <form id="finance-form" novalidate>
+
+        <div class="field">
+          <label for="income">Monthly income</label>
+          <input type="number" id="income" name="income" min="0" step="any"
+                 inputmode="decimal" placeholder="e.g. 50000" autocomplete="off" />
+        </div>
+
+        <fieldset>
+          <legend>Monthly expenses</legend>
+          <div class="expense-grid">
+            <div class="field">
+              <label for="exp-rent">Rent / Housing</label>
+              <input type="number" id="exp-rent" data-category="rent" min="0" step="any" inputmode="decimal" placeholder="0" />
+            </div>
+            <div class="field">
+              <label for="exp-food">Food</label>
+              <input type="number" id="exp-food" data-category="food" min="0" step="any" inputmode="decimal" placeholder="0" />
+            </div>
+            <div class="field">
+              <label for="exp-transport">Transportation</label>
+              <input type="number" id="exp-transport" data-category="transport" min="0" step="any" inputmode="decimal" placeholder="0" />
+            </div>
+            <div class="field">
+              <label for="exp-utilities">Utilities</label>
+              <input type="number" id="exp-utilities" data-category="utilities" min="0" step="any" inputmode="decimal" placeholder="0" />
+            </div>
+            <div class="field">
+              <label for="exp-entertainment">Entertainment</label>
+              <input type="number" id="exp-entertainment" data-category="entertainment" min="0" step="any" inputmode="decimal" placeholder="0" />
+            </div>
+            <div class="field">
+              <label for="exp-shopping">Shopping</label>
+              <input type="number" id="exp-shopping" data-category="shopping" min="0" step="any" inputmode="decimal" placeholder="0" />
+            </div>
+            <div class="field">
+              <label for="exp-healthcare">Healthcare</label>
+              <input type="number" id="exp-healthcare" data-category="healthcare" min="0" step="any" inputmode="decimal" placeholder="0" />
+            </div>
+            <div class="field">
+              <label for="exp-education">Education</label>
+              <input type="number" id="exp-education" data-category="education" min="0" step="any" inputmode="decimal" placeholder="0" />
+            </div>
+            <div class="field">
+              <label for="exp-other">Other</label>
+              <input type="number" id="exp-other" data-category="other" min="0" step="any" inputmode="decimal" placeholder="0" />
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Financial goal</legend>
+          <div class="field">
+            <label for="goal-select">Choose a goal</label>
+            <select id="goal-select">
+              <option value="Emergency fund">Emergency fund</option>
+              <option value="Laptop">Laptop</option>
+              <option value="Vacation">Vacation</option>
+              <option value="Education">Education</option>
+              <option value="Investment">Investment</option>
+              <option value="General savings">General savings</option>
+              <option value="custom">Custom goal&hellip;</option>
+            </select>
+          </div>
+          <div class="field hidden" id="custom-goal-wrap">
+            <label for="goal-custom">Custom goal name</label>
+            <input type="text" id="goal-custom" maxlength="120" placeholder="e.g. New bicycle" />
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="goal-target">Target amount <span class="optional">(optional)</span></label>
+              <input type="number" id="goal-target" min="0" step="any" inputmode="decimal" placeholder="e.g. 60000" />
+            </div>
+            <div class="field">
+              <label for="goal-duration">Duration in months <span class="optional">(optional)</span></label>
+              <input type="number" id="goal-duration" min="1" step="1" inputmode="numeric" placeholder="e.g. 6" />
+            </div>
+          </div>
+        </fieldset>
+
+        <div id="form-error" class="form-error hidden" role="alert">
+          <span id="form-error-text"></span>
+          <button type="button" id="retry-btn" class="btn-link hidden">Try again</button>
+        </div>
+
+        <button type="submit" id="analyse-btn" class="btn">Analyse my finances</button>
+
+        <div id="loading" class="loading hidden" aria-live="polite">
+          <span class="spinner" aria-hidden="true"></span>
+          <span>Analysing your finances&hellip;</span>
+          <span class="loading-hint">This can take a little longer when the AI model is busy.</span>
+        </div>
+      </form>
+
+      <p class="disclaimer">
+        This tool provides educational financial planning insights based on the information
+        you provide. It is not a substitute for professional financial advice.
+      </p>
+    </section>
+
+    <!-- ================= RESULTS + HISTORY ================= -->
+    <div class="results-column">
+
+      <section id="results-section" class="hidden" aria-label="Analysis results">
+        <p id="viewing-note" class="viewing-note" role="status"></p>
+
+        <section class="card" aria-labelledby="snapshot-title">
+          <h2 id="snapshot-title">Financial snapshot</h2>
+          <div id="snapshot-cards" class="snapshot-grid"></div>
+          <ul id="snapshot-details" class="snapshot-details"></ul>
+        </section>
+
+        <section class="card" aria-labelledby="budget-title">
+          <h2 id="budget-title">Budget plan</h2>
+          <p id="budget-summary" class="section-summary"></p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Category</th>
+                  <th scope="col" class="num">Current</th>
+                  <th scope="col" class="num">Recommended</th>
+                  <th scope="col">Why</th>
+                </tr>
+              </thead>
+              <tbody id="budget-tbody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card" aria-labelledby="spending-title">
+          <h2 id="spending-title">Spending analysis</h2>
+          <p id="spending-summary" class="section-summary"></p>
+          <h3>Observations</h3>
+          <ul id="spending-observations" class="dot-list"></ul>
+          <div id="spending-priorities" class="chip-row"></div>
+        </section>
+
+        <section class="card" aria-labelledby="suggestions-title">
+          <h2 id="suggestions-title">Saving suggestions</h2>
+          <div id="suggestions-grid" class="suggestions-grid"></div>
+        </section>
+
+        <section class="card" aria-labelledby="goal-title">
+          <h2 id="goal-title">Goal strategy</h2>
+          <dl id="goal-stats" class="goal-stats"></dl>
+          <p id="goal-strategy-text" class="section-summary"></p>
+        </section>
+
+        <section class="card" aria-labelledby="summary-title">
+          <h2 id="summary-title">Monthly summary</h2>
+          <p id="monthly-summary" class="section-summary"></p>
+        </section>
+
+        <section class="card" aria-labelledby="insights-title">
+          <h2 id="insights-title">Key insights</h2>
+          <ul id="insights-list" class="insight-list"></ul>
+        </section>
+
+        <section class="card warnings-card hidden" id="warnings-section" aria-labelledby="warnings-title">
+          <h2 id="warnings-title">Areas to watch</h2>
+          <ul id="warnings-list" class="warnings-list"></ul>
+        </section>
+      </section>
+
+      <section class="card history-card" aria-labelledby="history-title">
+        <div class="history-head">
+          <h2 id="history-title">Recent analyses</h2>
+          <button type="button" id="refresh-history" class="btn-secondary">Refresh</button>
+        </div>
+        <div id="history-list"></div>
+        <p id="history-empty" class="empty-state">No saved analyses yet &mdash; run your first analysis above and it will appear here.</p>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>Personal Finance Advisor Bot &mdash; an educational project (Flask + SQLite + Google Gemini).</p>
+      <p class="footer-disclaimer">
+        Educational financial planning insights only. Not regulated financial advice,
+        and no specific financial products are recommended.
+      </p>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
