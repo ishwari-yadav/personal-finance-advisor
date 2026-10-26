@@ -182,7 +182,7 @@ def _analysis_response(record: FinancialRecord, snapshot: dict, advice: dict) ->
 
 def create_app(test_config: dict | None = None) -> Flask:
     """Create and configure the app; database tables are created on startup."""
-    app = Flask(__name__)
+    app = Flask(__name__, instance_path="/tmp/instance")
     app.config.from_object(Config)
     if test_config:
         app.config.update(test_config)
